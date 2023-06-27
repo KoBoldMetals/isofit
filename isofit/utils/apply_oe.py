@@ -536,6 +536,8 @@ def apply_oe(args):
                 paths.loc_working_path,
                 paths.obs_working_path,
                 args.working_directory,
+                "--smoothing_sigma",
+                "2",
                 "--output_rfl_file",
                 paths.rfl_working_path,
                 "--output_unc_file",
@@ -544,6 +546,8 @@ def apply_oe(args):
                 args.logging_level,
                 "--logfile",
                 args.log_file,
+                "--rdn_factors_path",
+                args.rdn_factors_path,
                 "--n_atm_neighbors",
             ]
             analytical_line_args.extend([str(x) for x in nneighbors])
