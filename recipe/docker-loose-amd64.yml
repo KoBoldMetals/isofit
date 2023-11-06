@@ -1,0 +1,33 @@
+name: isofit_env
+
+channels: &id1
+  - http://conda.anaconda.org/conda-forge
+
+dependencies:
+  - python>=3.10
+  - pip
+  - click
+  - dask
+  - gdal
+  - matplotlib
+  - netCDF4
+  - numpy
+  - pandas
+  - pep8
+  - pre-commit
+  - protobuf
+  - pygrib
+  - pytest
+  - pyyaml
+  - scikit-image
+  - scikit-learn
+  - scipy
+  - spectral
+  - utm
+  - xarray
+
+  - pip:
+    - ndsplines
+    - sphinx-autodoc-typehints
+    - xxhash
+    - https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow_cpu-2.14.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
