@@ -18,7 +18,7 @@
 # Author: David R Thompson, david.r.thompson@jpl.nasa.gov
 #
 
-import scipy as s
+import numpy as np
 
 from isofit.configs import Config
 
@@ -48,24 +48,38 @@ class GlintSurface(ThermalSurface):
         mu[self.glint_ind] = self.init[self.glint_ind]
         return mu
 
-    def Sa(self, x_surface, geom):
+    def Sa(self, x_surface, geom, unnormalize=True):
         """Covariance of prior distribution, calculated at state x.  We find
         the covariance in a normalized space (normalizing by z) and then un-
         normalize the result for the calling function."""
 
-        Cov = ThermalSurface.Sa(self, x_surface, geom)
-        f = s.array([[(10.0 * self.scale[self.glint_ind]) ** 2]])
+        Cov = ThermalSurface.Sa(self, x_surface, geom, unnormalize)
+        f = np.array([[(10.0 * self.scale[self.glint_ind]) ** 2]])
         Cov[self.glint_ind, self.glint_ind] = f
         return Cov
+
+    def Sa_inv_sqrt(self, Sa, x_surface, geom, hashtable, max_hash_size):
+        """Inverse covariance and its square root of prior distribution, calculated at state x. We find
+        the inverse covariance in a normalized space (normalizing by z) and then un-
+        normalize the result for the calling function."""
+
+        Cov_inv, Cov_inv_sqrt = ThermalSurface.Sa_inv_sqrt(
+            self, Sa, x_surface, geom, hashtable, max_hash_size
+        )
+        f = np.array([[(10.0 * self.scale[self.glint_ind]) ** 2]])
+        Cov_inv[self.glint_ind, self.glint_ind] = 1 / f
+        Cov_inv_sqrt[self.glint_ind, self.glint_ind] = np.sqrt(1 / f)
+
+        return Cov_inv, Cov_inv_sqrt
 
     def fit_params(self, rfl_meas, geom, *args):
         """Given a reflectance estimate and one or more emissive parameters,
         fit a state vector."""
 
-        glint_band = s.argmin(abs(900 - self.wl))
-        glint = s.mean(rfl_meas[(glint_band - 2) : glint_band + 2])
-        water_band = s.argmin(abs(400 - self.wl))
-        water = s.mean(rfl_meas[(water_band - 2) : water_band + 2])
+        glint_band = np.argmin(abs(900 - self.wl))
+        glint = np.mean(rfl_meas[(glint_band - 2) : glint_band + 2])
+        water_band = np.argmin(abs(400 - self.wl))
+        water = np.mean(rfl_meas[(water_band - 2) : water_band + 2])
         if glint > 0.05 or water < glint:
             glint = 0
         glint = max(
@@ -96,8 +110,8 @@ class GlintSurface(ThermalSurface):
         the extra glint parameter"""
 
         dLs_dsurface = super().dLs_dsurface(x_surface, geom)
-        dLs_dglint = s.zeros((dLs_dsurface.shape[0], 1))
-        dLs_dsurface = s.hstack([dLs_dsurface, dLs_dglint])
+        dLs_dglint = np.zeros((dLs_dsurface.shape[0], 1))
+        dLs_dsurface = np.hstack([dLs_dsurface, dLs_dglint])
         return dLs_dsurface
 
     def summarize(self, x_surface, geom):
