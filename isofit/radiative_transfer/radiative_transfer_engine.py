@@ -37,7 +37,10 @@ from isofit.core import common
 from isofit.core.geometry import Geometry
 from isofit.radiative_transfer import luts
 
+
+import xarray as xr
 Logger = logging.getLogger(__file__)
+
 
 
 class RadiativeTransferEngine:
@@ -52,6 +55,15 @@ class RadiativeTransferEngine:
     onedim = ["fwhm", "solar_irr"]
 
     # Keys along all dimensions, ie. wl and point
+    # Keys for new flux based LUT: "path_radiance", "direct_flux", "diffuse_flux", "sphalb_num", "sphalb_denom";
+    alldim = [
+        "path_radiance",
+        "direct_flux",
+        "diffuse_flux",
+        "sphalb_num",
+        "sphalb_denom",
+    ]
+    '''
     alldim = [
         "rhoatm",
         "sphalb",
@@ -61,7 +73,7 @@ class RadiativeTransferEngine:
         "transm_up_dif",
         "thermal_upwelling",
         "thermal_downwelling",
-    ]
+    ]'''
     # These keys are filled with zeros instead of NaNs
     zeros = ["transm_down_dir", "transm_down_dif", "transm_up_dir", "transm_up_dif"]
 
@@ -104,7 +116,9 @@ class RadiativeTransferEngine:
         isofit.root, "data", "earth_sun_distance.txt"
     )
 
-    # These properties enable easy access to the lut data
+    # These properties (wl, fwhm, coszen, solar_irr) provide streamlined access to respective data elements in the 'lut' xarray dataset. 
+    # They utilize the '__getitem__' method for dictionary-like retrieval from 'self.lut', enhancing the ease and efficiency of data manipulation.
+
     wl = property(lambda self: self["wl"])
     fwhm = property(lambda self: self["fwhm"])
     coszen = property(lambda self: self["coszen"])
@@ -133,10 +147,12 @@ class RadiativeTransferEngine:
                 "The lut_path must be a valid path at this time. Either it exists as a valid LUT or a LUT will be generated to that path"
             )
 
+        self.universal_lut = False
+
         # Keys of the engine_config are available via self unless overridden
         # eg. engine_config.lut_names == self.lut_names
         self.engine_config = engine_config
-
+        
         # TODO: mlky should do all this verification stuff
         # Verify either the LUT file exists or a LUT grid is provided
         self.lut_path = lut_path = str(lut_path) or engine_config.lut_path
@@ -166,13 +182,44 @@ class RadiativeTransferEngine:
 
         # Extract from LUT file if available, otherwise initialize it
         if exists:
+            
+            self.universal_lut = True
+
+
             Logger.info(f"Prebuilt LUT provided")
             Logger.debug(
                 f"Reading from store: {lut_path}, subset={engine_config.lut_subset}"
             )
+
+            # Note: I'm using lut_grid from the config as min\max to subset!
             self.lut = luts.load(lut_path, lut_grid, subset=engine_config.lut_subset)
+            # set up resample object
+            
+            if os.path.exists(self.wavelength_file):
+                # If this file doesn't exist it will load the monochromatic LUT to the interpolator
+                # This is useful for calibration. See instrument.sample.
+                
+                wl, fwhm = common.load_wavelen(self.wavelength_file)
+                # initialize resampling class
+                rsmp = common.resample(self.lut.wl.data, wl, fwhm)
+                
+                if not len(wl) == len(self.lut.wl):
+                    conv = xr.Dataset(coords={'wl': wl, 'point': self.lut.point})
+
+                    for quantity in self.lut:
+                        print('resampling '+quantity)
+                        # TODO: make the list comp run in parallel
+                        data_to_process = self.lut[quantity].data
+ 
+                        add_to_ds = np.array([rsmp(x) for x in data_to_process])
+
+                        conv[quantity] = (('wl', 'point'), add_to_ds.T)
+
+            self.lut = conv
+
             self.lut_grid = lut_grid or luts.extractGrid(self.lut)
             self.points, self.lut_names = luts.extractPoints(self.lut)
+
         else:
             Logger.info(f"No LUT store found, beginning initialization and simulations")
             Logger.debug(f"Writing store to: {self.lut_path}")
@@ -245,16 +292,21 @@ class RadiativeTransferEngine:
             # For each point index, determine if that point derives from Geometry or x_RT
             self.indices = SimpleNamespace()
 
+            # flagging here - the commented logic was used and resulted with a problem
+            # where self.indices.x_RT held not only x_RT indices but also geometry.
+            # I solved it by replacing the commented by line 314 and now it works!
+
             # Hidden assumption: geometry keys come first, then come RTE keys
-            self.geometry_input_names = set(self.geometry_input_names) - set(
-                engine_config.statevector_names or self.lut_names
-            )
+            #self.geometry_input_names = set(self.geometry_input_names) - set(
+            #    engine_config.statevector_names or self.lut_names
+            #)
+            self.geomtry_input_names = set(self.geometry_input_names)
             self.indices.geom = {
                 i: key
                 for i, key in enumerate(self.lut_names)
                 if key in self.geometry_input_names
-            }
-            # If it wasn't a geom key, it's x_RT
+            } 
+
             self.indices.x_RT = list(set(range(self.n_point)) - set(self.indices.geom))
 
     def __getitem__(self, key):
@@ -289,7 +341,6 @@ class RadiativeTransferEngine:
 
         grid = [ds[key].data for key in self.lut_names]
 
-        # Create the unique
         for key in self.alldim:
             self.luts[key] = common.VectorInterpolator(
                 grid_input=grid,
@@ -384,7 +435,6 @@ class RadiativeTransferEngine:
             ...
         """
         point = np.zeros(self.n_point)
-
         point[self.indices.x_RT] = x_RT
         for i, key in self.indices.geom.items():
             point[i] = getattr(geom, key)
