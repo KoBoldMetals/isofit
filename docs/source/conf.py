@@ -12,14 +12,15 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../isofit'))
+
+sys.path.insert(0, os.path.abspath("../../isofit"))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'ISOFIT: Imaging Spectrometer Optimal FITting'
-copyright = 'Copyright 2018 California Institute of Technology'
-author = ''' D. R. Thompson, P. G. Brodrick, W. Olson Duvall, others'''
+project = "ISOFIT: Imaging Spectrometer Optimal FITting"
+copyright = "Copyright 2018 California Institute of Technology"
+author = """ D. R. Thompson, P. G. Brodrick, W. Olson Duvall, others"""
 
 
 # -- General configuration ---------------------------------------------------
@@ -28,24 +29,24 @@ author = ''' D. R. Thompson, P. G. Brodrick, W. Olson Duvall, others'''
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.coverage',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.todo',
-    'sphinx.ext.intersphinx',
-    'sphinx_autodoc_typehints'
+    "sphinx.ext.autodoc",
+    "sphinx.ext.coverage",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.todo",
+    "sphinx.ext.intersphinx",
+    "sphinx_autodoc_typehints",
 ]
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
-    'numpy': ('https://numpy.org/doc/stable', None),
-    'sklearn': ('https://sklearn-features.readthedocs.io/en/stable', None),
-    'scipy': ('https://docs.scipy.org/doc/scipy/', None)
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+    "sklearn": ("https://sklearn-features.readthedocs.io/en/stable", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -58,7 +59,7 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = "sphinx_rtd_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -66,10 +67,10 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = []
 
 # make sure things will work with readthedocs
-autodoc_mock_imports = ["ray","tensorflow","osgeo"]
-master_doc = 'index'
+autodoc_mock_imports = ["ray", "osgeo"]
+master_doc = "index"
 
-autodoc_member_order = 'bysource'
+autodoc_member_order = "bysource"
 todo_include_todos = True
 add_module_names = False
-modindex_common_prefix = ['isofit']
+modindex_common_prefix = ["isofit"]

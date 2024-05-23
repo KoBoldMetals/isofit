@@ -59,11 +59,11 @@ In order to support a wide variety of environments, ISOFIT does not overly
 constrain its dependencies, however this means that in some cases ``pip`` can
 take a very long time to resolve ISOFIT's dependency tree. Some users may need
 to provide constraints for specific packages, or install ISOFIT last. In
-particular, ``tensorflow`` can be troublesome. Users might have success with:
+particular, ~~``tensorflow``~~ can be troublesome. Users might have success with:
 
 .. code-block:: bash
 
-    $ pip install numpy tensorflow
+    $ pip install numpy ~~tensorflow~~
     $ pip install isofit
 
 ``pip`` also supports installing from a remote git repository – this installs
@@ -270,4 +270,4 @@ Ray may have compatability issues with older machines with glibc < 2.14.
 Additional Installation Info for Developers
 ========================================
 
-Be sure to read the :ref:`contributing` page as additional installation steps must be performed. 
+Be sure to read the :ref:`contributing` page as additional installation steps must be performed.
