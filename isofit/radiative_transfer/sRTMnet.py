@@ -29,11 +29,6 @@ import numpy as np
 import yaml
 from scipy import interpolate
 
-try:
-    from tensorflow import keras
-except ImportError:
-    raise EnvironmentError("This installation of Isofit does no include tensorflow.")
-
 from isofit import ray
 from isofit.configs import Config
 from isofit.configs.sections.radiative_transfer_config import (
@@ -44,6 +39,8 @@ from isofit.core.sunposition import sunpos
 from isofit.radiative_transfer.six_s import SixSRT
 
 from .look_up_tables import TabularRT
+
+# from tensorflow import keras
 
 
 @ray.remote
@@ -68,6 +65,13 @@ class SimulatedModtranRT(TabularRT):
     def __init__(
         self, engine_config: RadiativeTransferEngineConfig, full_config: Config
     ):
+        try:
+            from tensorflow import keras
+        except ImportError:
+            raise EnvironmentError(
+                "This installation of Isofit does no include tensorflow."
+            )
+
         # Specify which of the potential MODTRAN LUT parameters are angular, which will be handled differently
         self.angular_lut_keys_degrees = [
             "OBSZEN",
