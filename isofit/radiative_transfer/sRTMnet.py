@@ -28,7 +28,11 @@ from sys import platform
 import numpy as np
 import yaml
 from scipy import interpolate
-from tensorflow import keras
+
+try:
+    from tensorflow import keras
+except ImportError:
+    raise EnvironmentError("This installation of Isofit does no include tensorflow.")
 
 from isofit import ray
 from isofit.configs import Config
@@ -93,9 +97,8 @@ class SimulatedModtranRT(TabularRT):
         for lq in self.lut_quantities:
             if lq not in emulator_aux["rt_quantities"].tolist() and lq != "transup":
                 raise AttributeError(
-                    "lut_quantities: {} do not match emulator_aux rt_quantities: {}".format(
-                        self.lut_quantities, emulator_aux["rt_quantities"]
-                    )
+                    "lut_quantities: {} do not match emulator_aux rt_quantities: {}"
+                    .format(self.lut_quantities, emulator_aux["rt_quantities"])
                 )
 
         interpolator_disk_paths = [
