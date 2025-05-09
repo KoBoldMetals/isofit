@@ -27,7 +27,6 @@ from datetime import date, timedelta
 
 import click
 import numpy as np
-import pygrib
 
 from isofit.core.common import json_load_ascii
 
@@ -297,6 +296,13 @@ def download_HRRR(
 
 
 def get_HRRR_data(filename):
+    try:
+        import pygrib
+    except ImportError:
+        raise ImportError("""
+            pygrib is not installed automatically with this fork of isofit.
+            Please install pygrib to use this util.
+        """)
     grbs = pygrib.open(filename)
 
     msgs = [str(grb) for grb in grbs]
